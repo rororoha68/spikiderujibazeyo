@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>스핔이 라이브 배경화면</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#171a33; --surface:#232850; --line:#3a4080; --text:#f2f0fb; --muted:#a9acd0;
+  --mint:#8fe3cf; --peach:#ffb7a5;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{background:var(--bg)}
+body{margin:0;min-height:100vh;background:radial-gradient(900px 420px at 85% -10%,#2c3270 0,transparent 70%),var(--bg);
+  color:var(--text);font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.6}
+main{max-width:960px;margin:0 auto;padding:40px 20px 64px}
+h1{font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-weight:900;letter-spacing:-.01em;font-size:clamp(32px,7vw,54px);line-height:1.15;margin:0 0 12px}
+h1 span{color:var(--mint)}
+h2{font-size:18px;margin:36px 0 12px}
+.lead{color:var(--muted);margin:0 0 32px;max-width:36em}
+.lead a{color:var(--peach);font-weight:700}
+.tabs{display:inline-flex;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;margin-bottom:28px}
+.tabs button{font:inherit;font-weight:500;color:var(--muted);background:none;border:0;border-radius:999px;padding:8px 22px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--mint);color:#10233b}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--peach);outline-offset:2px}
+.grid{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px;width:var(--w)}
+.view[data-type="mobile"]{--w:210px;--ratio:9/19.5;--r:22px}
+.view[data-type="pc"]{--w:min(100%,420px);--ratio:16/9;--r:10px}
+.view[data-type="watch"]{--w:190px;--ratio:1/1;--r:30%}
+.frame{aspect-ratio:var(--ratio);border-radius:var(--r);overflow:hidden;background:#0d0f22;position:relative}
+.frame video,.frame img{width:100%;height:100%;object-fit:cover;display:block}
+.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:12px;color:var(--muted);font-size:13px}
+.name{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-top:12px;gap:8px}
+.btns{display:flex;gap:6px}
+.dl.alt{background:transparent;color:var(--peach);border:1px solid var(--peach);padding:6px 12px}
+.dl{background:var(--peach);color:#3a1a12;font-weight:700;text-decoration:none;font-size:14px;padding:7px 14px;border-radius:999px}
+.spec{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:0;padding:16px 18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;max-width:40em}
+.spec dt{color:var(--muted)} .spec dd{margin:0}
+details{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 18px;margin-bottom:10px;max-width:40em}
+summary{cursor:pointer;font-weight:700}
+details ol{margin:10px 0 0;padding-left:20px;color:var(--muted)}
+details li{margin-bottom:4px}
+#termsText h3{font-size:16px;margin:24px 0 6px}
+#termsText p{margin:4px 0;color:var(--muted);max-width:40em}
+footer{max-width:960px;margin:0 auto;padding:20px 20px 48px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+footer p{margin:4px 0;max-width:40em}
+footer a{color:var(--peach);font-weight:700}
+.caveat{color:var(--muted);font-size:14px;margin-top:6px;max-width:40em}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){video{display:none}}
+</style>
+</head>
+<body>
+<main>
+  <h1>스핔이 <span>라이브 배경화면</span></h1>
+  <p class="lead">무료로 배포하는 라이브 배경화면이에요. 사용하는 기기를 골라 저장해주세요. <a href="#terms">이용약관</a>을 꼭 확인해주세요!</p>
+
+  <div class="tabs" role="tablist" aria-label="기기 선택">
+    <button role="tab" id="t-mobile" data-t="mobile">모바일</button>
+    <button role="tab" id="t-pc" data-t="pc">PC</button>
+    <button role="tab" id="t-watch" data-t="watch">워치</button>
+  </div>
+
+  <section id="device" role="tabpanel">
+    <div class="view" id="view"><div class="grid" id="grid"></div></div>
+    <h2>규격</h2>
+    <dl class="spec" id="spec"></dl>
+    <h2>설정 방법</h2>
+    <div id="guides"></div>
+    <p class="caveat">기종과 OS 버전에 따라 메뉴 이름이나 동작이 다를 수 있어요.</p>
+  </section>
+
+  <section id="terms" hidden>
+    <h2>이용약관</h2>
+    <div id="termsText"></div>
+    <p><a href="#mobile" style="color:var(--peach)">배경화면으로 돌아가기</a></p>
+  </section>
+</main>
+
+<footer id="credits"></footer>
+
+<script>
+/* ▼ 여기만 고치면 돼요 */
+const ORIGINAL = "트릭컬 리바이브";      // 원작 작품명
+const ORIGINAL_URL = "https://trickcal.com/";  // 원작 링크 (게임 공식 사이트)
+const CREATOR_NAME = "로하";      // 제작자 표기 이름
+const CREATOR_URL = "https://x.com/rororoha_68";  // 제작자 링크 (비워 두면 링크 없이 이름만 표시)
+const CONTACT  = "bpnga2000@gmail.com";      // 문의 채널(SNS 계정, 이메일 등)
+const EFFECTIVE = "2026년 11월 12일";     // 예: 2026년 11월 12일
+const TERMS = [
+  ["제1조 (목적)", [
+    "이 약관은 '스핔이 라이브 배경화면'(이하 '본 사이트')에서 무료로 배포하는 배경화면(이하 '배포물')의 이용 조건을 정함을 목적으로 합니다."
+  ]],
+  ["제2조 (2차 창작물 및 저작권)", [
+    "① 배포물은 " + ORIGINAL + "을(를) 바탕으로 제작한 비공식 팬 제작물(2차 창작물)이며, 원작 및 원작 권리자와 무관합니다.",
+    "② 원작의 캐릭터 등에 대한 권리는 원작 권리자에게 있으며, 배포물에서 제작자가 새로 만든 부분에 대한 권리는 제작자에게 있습니다.",
+    "③ 원작 권리자의 가이드라인이 변경되거나 권리자의 요청이 있는 경우, 배포물은 예고 없이 수정되거나 배포가 중단될 수 있습니다."
+  ]],
+  ["제3조 (이용 범위)", [
+    "이용자는 배포물을 본인 기기의 배경화면으로 설정하는 개인적·비상업적 용도에 한하여 무료로 이용할 수 있습니다."
+  ]],
+  ["제4조 (금지 행위)", [
+    "이용자는 다음 행위를 할 수 없습니다.",
+    "1. 배포물 파일을 다른 사이트나 서비스에 다시 올리거나 배포하는 행위",
+    "2. 배포물을 판매하거나 유료로 제공하는 등 영리 목적으로 이용하는 행위",
+    "3. 배포물을 수정·가공하여 배포하는 행위",
+    "4. 제작자를 사칭하거나 배포물을 본인이 제작한 것처럼 표시하는 행위",
+    "5. 배포물을 인공지능 학습 데이터로 이용하는 행위",
+    "6. 배포물을 비방, 혐오, 선정적인 내용 등 원작과 제작자의 이미지를 훼손하는 맥락에 이용하는 행위"
+  ]],
+  ["제5조 (링크 공유 및 SNS 게시)", [
+    "① 본 사이트의 링크를 다른 사람에게 공유하는 것은 자유롭게 할 수 있습니다.",
+    "② 배경화면을 설정한 화면을 개인 SNS에 게시하는 것은 허용되며, 출처를 표기해 주시기를 권장합니다."
+  ]],
+  ["제6조 (서비스 변경 및 중단)", [
+    "제작자는 사전 고지 없이 배포물을 교체하거나 배포를 중단하거나 본 사이트의 내용을 변경할 수 있습니다."
+  ]],
+  ["제7조 (면책)", [
+    "제작자는 기기 및 운영체제 호환 문제, 설정 실패, 배터리 소모, 데이터 통신 요금, 이용자가 사용하는 외부 앱·프로그램으로 인해 발생한 문제에 대하여 책임을 지지 않습니다."
+  ]],
+  ["제8조 (위반 시 조치)", [
+    "이용자가 이 약관을 위반한 경우 제작자는 해당 게시물의 삭제를 요청할 수 있으며, 필요한 경우 법적 조치를 할 수 있습니다."
+  ]],
+  ["제9조 (문의 및 개정)", [
+    "① 이 약관에 관한 문의는 " + CONTACT + "으로 해 주시기 바랍니다.",
+    "② 약관을 개정하는 경우 본 사이트에 공지하며, 개정된 약관은 공지한 때부터 효력이 발생합니다.",
+    "③ 이 약관은 " + EFFECTIVE + "부터 시행합니다."
+  ]]
+];
+
+const DEVICES = {
+  mobile: {
+    items: [
+      { name: "쪼아요", file: "assets/mobile/joayo.mp4" },
+      { name: "네르지마세요", file: "assets/mobile/nerujimaseyo.mp4" }
+    ],
+    spec: [["사이즈", "1080 × 2340px (세로, 9:19.5)"], ["파일 형식", "MP4"]],
+    guides: [
+      { title: "아이폰", steps: [
+        "저장한 영상을 Live Photo로 바꿔주는 앱으로 Live Photo로 변환해요.",
+        "설정 > 배경화면 > 새로운 배경화면 추가 > 사진에서 변환한 Live Photo를 골라요.",
+        "Live Photo 버튼을 켜고 추가해요. 잠금화면에서 움직이고, 홈 화면에서는 움직이지 않아요."
+      ]},
+      { title: "갤럭시", steps: [
+        "저장한 영상을 갤러리에서 열어요.",
+        "더보기(⋮) > 배경화면으로 설정 > 잠금화면을 골라요.",
+        "메뉴 이름은 One UI 버전에 따라 달라요."
+      ]},
+      { title: "그 외 안드로이드", steps: [
+        "영상을 배경화면으로 지정할 수 있는 라이브 배경화면 앱을 설치해요.",
+        "앱에서 저장한 영상을 골라 배경화면으로 설정해요."
+      ]}
+    ]
+  },
+  pc: {
+    items: [
+      { name: "쪼아요", file: "assets/pc/joayo.mp4" },
+      { name: "네르지마세요", file: "assets/pc/nerujimaseyo.mp4" }
+    ],
+    spec: [["사이즈", "1920 × 1080px (가로, 16:9)"], ["파일 형식", "MP4"]],
+    guides: [
+      { title: "윈도우", steps: [
+        "영상 배경화면을 지원하는 프로그램을 설치해요. (예: Lively Wallpaper, Wallpaper Engine)",
+        "프로그램에서 저장한 영상을 추가하고 배경화면으로 지정해요."
+      ]},
+      { title: "맥", steps: [
+        "맥은 영상 배경화면 기능이 기본으로 없어서 영상 배경화면 앱이 필요해요.",
+        "앱에서 저장한 영상을 추가하고 배경화면으로 지정해요."
+      ]}
+    ]
+  },
+  watch: {
+    items: [
+      { name: "쪼아요", file: "assets/watch/joayo.mp4", gif: "assets/watch/joayo.gif" },
+      { name: "네르지마세요", file: "assets/watch/nerujimaseyo.mp4", gif: "assets/watch/nerujimaseyo.gif" }
+    ],
+    spec: [["사이즈", "450 × 450px (정사각형)"], ["파일 형식", "MP4 (애플워치) / GIF (갤럭시 워치)"]],
+    guides: [
+      { title: "갤럭시 워치", steps: [
+        "GIF로 저장해서 연결된 폰에 보관해요.",
+        "Galaxy Wearable 앱 > 워치 페이스 > My Photo+를 골라요.",
+        "커스터마이즈에서 저장한 GIF를 배경으로 추가해요."
+      ]},
+      { title: "애플워치", steps: [
+        "MP4로 저장해서 Live Photo로 변환해요.",
+        "워치 앱에서 사진 워치 페이스를 추가하고 변환한 Live Photo를 골라요.",
+        "애플워치는 Live Photo를 최대 3초까지만 재생하고, 화면을 눌러야 움직여요."
+      ]}
+    ]
+  }
+};
+/* ▲ */
+
+const $ = id => document.getElementById(id);
+
+function nameOrLink(text, url){
+  if (!url) return document.createTextNode(text);
+  const a = document.createElement("a");
+  a.href = url; a.textContent = text; a.target = "_blank"; a.rel = "noopener noreferrer";
+  return a;
+}
+(function renderCredits(){
+  const f = $("credits");
+  const p1 = document.createElement("p");
+  p1.append("원작: ", nameOrLink(ORIGINAL, ORIGINAL_URL));
+  const p2 = document.createElement("p");
+  p2.append("제작: ", nameOrLink(CREATOR_NAME, CREATOR_URL));
+  const p3 = document.createElement("p");
+  p3.textContent = "이 사이트의 배경화면은 " + ORIGINAL + "을(를) 바탕으로 제작한 비공식 팬 제작물이며, 원작의 저작권은 원작 권리자에게 있습니다.";
+  f.append(p1, p2, p3);
+})();
+const tabs = [...document.querySelectorAll(".tabs button")];
+
+function media(file, label, frame){
+  const isImg = /\.(gif|png|webp)$/i.test(file);
+  const el = document.createElement(isImg ? "img" : "video");
+  el.setAttribute("aria-label", label + " 미리보기");
+  if (isImg) { el.alt = label + " 미리보기"; }
+  else { el.muted = true; el.loop = true; el.autoplay = true; el.playsInline = true; }
+  el.src = file;
+  el.addEventListener("error", () => {
+    el.remove();
+    const e = document.createElement("div");
+    e.className = "empty";
+    e.textContent = "파일을 찾을 수 없어요";
+    frame.appendChild(e);
+  });
+  return el;
+}
+
+function renderDevice(type){
+  const d = DEVICES[type];
+  $("view").dataset.type = type;
+  $("device").setAttribute("aria-labelledby", "t-" + type);
+  tabs.forEach(b => b.setAttribute("aria-selected", String(b.dataset.t === type)));
+
+  const grid = $("grid"); grid.textContent = "";
+  d.items.forEach(it => {
+    const card = document.createElement("div"); card.className = "card";
+    const frame = document.createElement("div"); frame.className = "frame";
+    frame.appendChild(media(it.file, it.name, frame));
+    const row = document.createElement("div"); row.className = "name";
+    const b = document.createElement("b"); b.textContent = it.name;
+    const btns = document.createElement("div"); btns.className = "btns";
+    const mk = (href, text, alt) => {
+      const a = document.createElement("a");
+      a.className = "dl" + (alt ? " alt" : ""); a.href = href; a.download = ""; a.textContent = text;
+      return a;
+    };
+    if (it.gif) btns.append(mk(it.file, "MP4 저장"), mk(it.gif, "GIF 저장", true));
+    else btns.append(mk(it.file, "저장하기"));
+    row.append(b, btns);
+    card.append(frame, row); grid.appendChild(card);
+  });
+
+  const spec = $("spec"); spec.textContent = "";
+  d.spec.forEach(([k, v]) => {
+    const dt = document.createElement("dt"); dt.textContent = k;
+    const dd = document.createElement("dd"); dd.textContent = v;
+    spec.append(dt, dd);
+  });
+
+  const guides = $("guides"); guides.textContent = "";
+  d.guides.forEach((g, i) => {
+    const det = document.createElement("details"); if (i === 0) det.open = true;
+    const sum = document.createElement("summary"); sum.textContent = g.title;
+    const ol = document.createElement("ol");
+    g.steps.forEach(s => { const li = document.createElement("li"); li.textContent = s; ol.appendChild(li); });
+    det.append(sum, ol); guides.appendChild(det);
+  });
+}
+
+function route(){
+  const h = location.hash.slice(1);
+  const isTerms = h === "terms";
+  $("terms").hidden = !isTerms;
+  $("device").hidden = isTerms;
+  document.querySelector(".tabs").hidden = isTerms;
+  if (isTerms) {
+    const box = $("termsText"); box.textContent = "";
+    TERMS.forEach(([title, paras]) => {
+      const h = document.createElement("h3"); h.textContent = title; box.appendChild(h);
+      paras.forEach(t => { const p = document.createElement("p"); p.textContent = t; box.appendChild(p); });
+    });
+    window.scrollTo(0, 0);
+    return;
+  }
+  renderDevice(DEVICES[h] ? h : "mobile");
+}
+tabs.forEach(b => b.addEventListener("click", () => { location.hash = b.dataset.t; }));
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>
