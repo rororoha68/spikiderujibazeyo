@@ -34,6 +34,7 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var
 .view[data-type="mobile"]{--w:210px;--ratio:9/19.5;--r:22px}
 .view[data-type="pc"]{--w:min(100%,420px);--ratio:16/9;--r:10px}
 .view[data-type="watch"]{--w:190px;--ratio:1/1;--r:30%}
+.view[data-type="reactive"]{--w:min(100%,420px);--ratio:16/9;--r:10px}
 .frame{aspect-ratio:var(--ratio);border-radius:var(--r);overflow:hidden;background:#0d0f22;position:relative}
 .frame video,.frame img{width:100%;height:100%;object-fit:cover;display:block}
 .empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:12px;color:var(--muted);font-size:13px}
@@ -66,6 +67,7 @@ footer a{color:var(--peach);font-weight:700}
     <button role="tab" id="t-mobile" data-t="mobile">모바일</button>
     <button role="tab" id="t-pc" data-t="pc">PC</button>
     <button role="tab" id="t-watch" data-t="watch">워치</button>
+    <button role="tab" id="t-reactive" data-t="reactive">반응형</button>
   </div>
 
   <section id="device" role="tabpanel">
@@ -194,6 +196,30 @@ const DEVICES = {
         "애플워치는 Live Photo를 최대 3초까지만 재생하고, 화면을 눌러야 움직여요."
       ]}
     ]
+  },
+  reactive: {
+    // preview = 반응 장면 미리보기 영상(선택), poster = 미리보기 대표 이미지, file = 배포 파일(zip 등), workshop = 스팀 워크샵 주소(선택)
+    items: [
+      { name: "쪼아요", preview: "assets/reactive/joayo.mp4", poster: "assets/reactive/joayo.png", file: "assets/reactive/joayo.zip", label: "다운로드", workshop: "" },
+      { name: "네르지마세요", preview: "assets/reactive/nerujimaseyo.mp4", poster: "assets/reactive/nerujimaseyo.png", file: "assets/reactive/nerujimaseyo.zip", label: "다운로드", workshop: "" }
+    ],
+    spec: [["대상", "PC (윈도우)"], ["필요 프로그램", "Wallpaper Engine (스팀)"], ["파일 형식", "Wallpaper Engine 배경화면 파일 (ZIP)"]],
+    guides: [
+      { title: "스팀 워크샵으로 받기", steps: [
+        "스팀에 로그인하고 Wallpaper Engine이 설치되어 있는지 확인합니다. (유료 프로그램입니다.)",
+        "원하는 배경화면의 워크샵 버튼을 눌러 스팀 워크샵 페이지를 엽니다.",
+        "구독을 누르면 Wallpaper Engine에 자동으로 추가됩니다.",
+        "Wallpaper Engine을 열어 설치된 배경화면 중에서 선택해 적용한 뒤, 캐릭터에 마우스로 반응해 보세요."
+      ]},
+      { title: "파일로 받기 (ZIP)", steps: [
+        "다운로드한 ZIP 파일의 압축을 풉니다.",
+        "Wallpaper Engine에서 배경화면 열기 > 파일에서 열기를 선택하고, 압축을 푼 폴더 안의 배경화면 파일을 엽니다.",
+        "배경화면으로 적용합니다."
+      ]},
+      { title: "맥 / 모바일", steps: [
+        "Wallpaper Engine은 윈도우용 프로그램이라 반응형 배경화면은 윈도우 PC에서만 이용할 수 있습니다."
+      ]}
+    ]
   }
 };
 /* ▲ */
@@ -245,16 +271,18 @@ function renderDevice(type){
   d.items.forEach(it => {
     const card = document.createElement("div"); card.className = "card";
     const frame = document.createElement("div"); frame.className = "frame";
-    frame.appendChild(media(it.file, it.name, frame, it.png));
+    frame.appendChild(media(it.preview || it.file, it.name, frame, it.poster || it.png));
     const row = document.createElement("div"); row.className = "name";
     const b = document.createElement("b"); b.textContent = it.name;
     const btns = document.createElement("div"); btns.className = "btns";
-    const mk = (href, text, alt) => {
+    const mk = (href, text, alt, ext) => {
       const a = document.createElement("a");
-      a.className = "dl" + (alt ? " alt" : ""); a.href = href; a.download = ""; a.textContent = text;
+      a.className = "dl" + (alt ? " alt" : ""); a.href = href; a.textContent = text;
+      if (ext) { a.target = "_blank"; a.rel = "noopener noreferrer"; } else { a.download = ""; }
       return a;
     };
-    btns.append(mk(it.file, "MP4 저장"));
+    btns.append(mk(it.file, it.label || "MP4 저장"));
+    if (it.workshop) btns.append(mk(it.workshop, "워크샵", true, true));
     if (it.gif) btns.append(mk(it.gif, "GIF 저장", true));
     if (it.png) btns.append(mk(it.png, "PNG 저장", true));
     row.append(b, btns);
