@@ -7,7 +7,7 @@
 <title>스핔이 라이브 배경화면</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#171a33; --surface:#232850; --line:#3a4080; --text:#f2f0fb; --muted:#a9acd0;
@@ -54,14 +54,35 @@ footer{max-width:960px;margin:0 auto;padding:20px 20px 48px;border-top:1px solid
 footer p{margin:4px 0;max-width:40em}
 footer a{color:var(--peach);font-weight:700}
 .caveat{color:var(--muted);font-size:14px;margin-top:6px;max-width:40em}
+
+html[lang="ja"] body{font-family:"Noto Sans JP","Noto Sans KR","Hiragino Sans","Yu Gothic",system-ui,sans-serif}
+html[lang="ja"] h1{font-family:"Noto Sans JP","Noto Sans KR","Hiragino Sans","Yu Gothic",sans-serif}
+html[lang="en"] h1{letter-spacing:-.02em}
+.topbar{display:flex;justify-content:flex-end;margin-bottom:20px}
+.langs{display:inline-flex;gap:2px;padding:3px;background:var(--surface);border:1px solid var(--line);border-radius:999px}
+.langs button{font:inherit;font-size:13px;font-weight:500;color:var(--muted);background:none;border:0;border-radius:999px;padding:5px 12px;cursor:pointer;white-space:nowrap}
+.langs button[aria-pressed="true"]{background:var(--peach);color:#3a1a12;font-weight:700}
+.notice{margin:0 0 24px;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--peach);border-radius:10px;color:var(--muted);font-size:14px;max-width:40em}
+.tabs{max-width:100%;overflow-x:auto}
+.tabs button{white-space:nowrap}
+@media (max-width:480px){.tabs button{padding:8px 14px}}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion:reduce){video{display:none}}
 </style>
 </head>
 <body>
 <main>
-  <h1>스핔이 <span>라이브 배경화면</span></h1>
-  <p class="lead">무료로 배포하는 라이브 배경화면이에요. 사용하는 기기를 골라 저장해주세요. <a href="#terms">이용약관</a>을 꼭 확인해주세요!</p>
+  <div class="topbar">
+    <div class="langs" role="group" aria-label="Language / 언어 / 言語">
+      <button type="button" data-l="ko" lang="ko">한국어</button>
+      <button type="button" data-l="ja" lang="ja">日本語</button>
+      <button type="button" data-l="en" lang="en">English</button>
+    </div>
+  </div>
+  <p class="notice" id="notice" role="note" hidden></p>
+
+  <h1 id="title">스핔이 <span>라이브 배경화면</span></h1>
+  <p class="lead" id="lead">무료로 배포하는 라이브 배경화면이에요. 사용하는 기기를 골라 저장해주세요. <a href="#terms">이용약관</a>을 꼭 확인해주세요!</p>
 
   <div class="tabs" role="tablist" aria-label="기기 선택">
     <button role="tab" id="t-mobile" data-t="mobile">모바일</button>
@@ -72,159 +93,493 @@ footer a{color:var(--peach);font-weight:700}
 
   <section id="device" role="tabpanel">
     <div class="view" id="view"><div class="grid" id="grid"></div></div>
-    <h2>규격</h2>
+    <h2 id="specTitle">규격</h2>
     <dl class="spec" id="spec"></dl>
-    <h2>설정 방법</h2>
+    <h2 id="guideTitle">설정 방법</h2>
     <div id="guides"></div>
-    <p class="caveat">기종과 OS 버전에 따라 메뉴 이름이나 동작이 다를 수 있어요.</p>
+    <p class="caveat" id="caveat">기종과 OS 버전에 따라 메뉴 이름이나 동작이 다를 수 있어요.</p>
   </section>
 
   <section id="terms" hidden>
-    <h2>이용약관</h2>
+    <h2 id="termsTitle">이용약관</h2>
     <div id="termsText"></div>
-    <p><a href="#mobile" style="color:var(--peach)">배경화면으로 돌아가기</a></p>
+    <p><a href="#mobile" id="backLink" style="color:var(--peach)">배경화면으로 돌아가기</a></p>
   </section>
 </main>
 
 <footer id="credits"></footer>
 
 <script>
-/* ▼ 여기만 고치면 돼요 */
-const ORIGINAL = "트릭컬 리바이브";      // 원작 작품명
+/* ▼ 여기만 고치면 돼요 (언어와 무관한 값) */
 const ORIGINAL_URL = "https://trickcal.com/";  // 원작 링크 (게임 공식 사이트)
-const CREATOR_NAME = "로하";      // 제작자 표기 이름
 const CREATOR_URL = "https://x.com/rororoha_68";  // 제작자 링크 (비워 두면 링크 없이 이름만 표시)
 const CONTACT  = "bpnga2000@gmail.com";      // 문의 채널(SNS 계정, 이메일 등)
-const EFFECTIVE = "2026년 11월 12일";     // 예: 2026년 11월 12일
-const TERMS = [
-  ["제1조 (목적)", [
-    "이 약관은 '스핔이 라이브 배경화면'(이하 '본 사이트')에서 무료로 배포하는 배경화면(이하 '배포물')의 이용 조건을 정함을 목적으로 합니다."
-  ]],
-  ["제2조 (2차 창작물 및 저작권)", [
-    "① 배포물은 " + ORIGINAL + "을(를) 바탕으로 제작한 비공식 팬 제작물(2차 창작물)이며, 원작 및 원작 권리자와 무관합니다.",
-    "② 원작의 캐릭터 등에 대한 권리는 원작 권리자에게 있으며, 배포물에서 제작자가 새로 만든 부분에 대한 권리는 제작자에게 있습니다.",
-    "③ 원작 권리자의 가이드라인이 변경되거나 권리자의 요청이 있는 경우, 배포물은 예고 없이 수정되거나 배포가 중단될 수 있습니다."
-  ]],
-  ["제3조 (이용 범위)", [
-    "이용자는 배포물을 본인 기기의 배경화면으로 설정하는 개인적·비상업적 용도에 한하여 무료로 이용할 수 있습니다."
-  ]],
-  ["제4조 (금지 행위)", [
-    "이용자는 다음 행위를 할 수 없습니다.",
-    "1. 배포물 파일을 다른 사이트나 서비스에 다시 올리거나 배포하는 행위",
-    "2. 배포물을 판매하거나 유료로 제공하는 등 영리 목적으로 이용하는 행위",
-    "3. 배포물을 수정·가공하여 배포하는 행위",
-    "4. 제작자를 사칭하거나 배포물을 본인이 제작한 것처럼 표시하는 행위",
-    "5. 배포물을 인공지능 학습 데이터로 이용하는 행위",
-    "6. 배포물을 비방, 혐오, 선정적인 내용 등 원작과 제작자의 이미지를 훼손하는 맥락에 이용하는 행위"
-  ]],
-  ["제5조 (링크 공유 및 SNS 게시)", [
-    "① 본 사이트의 링크를 다른 사람에게 공유하는 것은 자유롭게 할 수 있습니다.",
-    "② 배경화면을 설정한 화면을 개인 SNS에 게시하는 것은 허용되며, 출처를 표기해 주시기를 권장합니다."
-  ]],
-  ["제6조 (서비스 변경 및 중단)", [
-    "제작자는 사전 고지 없이 배포물을 교체하거나 배포를 중단하거나 본 사이트의 내용을 변경할 수 있습니다."
-  ]],
-  ["제7조 (면책)", [
-    "제작자는 기기 및 운영체제 호환 문제, 설정 실패, 배터리 소모, 데이터 통신 요금, 이용자가 사용하는 외부 앱·프로그램으로 인해 발생한 문제에 대하여 책임을 지지 않습니다."
-  ]],
-  ["제8조 (위반 시 조치)", [
-    "이용자가 이 약관을 위반한 경우 제작자는 해당 게시물의 삭제를 요청할 수 있으며, 필요한 경우 법적 조치를 할 수 있습니다."
-  ]],
-  ["제9조 (문의 및 개정)", [
-    "① 이 약관에 관한 문의는 " + CONTACT + "으로 해 주시기 바랍니다.",
-    "② 약관을 개정하는 경우 본 사이트에 공지하며, 개정된 약관은 공지한 때부터 효력이 발생합니다.",
-    "③ 이 약관은 " + EFFECTIVE + "부터 시행합니다."
-  ]]
-];
+const DEFAULT_LANG = "en";                    // 한국어·일본어·영어 이외의 언어로 접속했을 때 보여줄 언어
 
+/* 배포 파일 (언어와 무관) */
 const DEVICES = {
-  mobile: {
-    items: [
-      { name: "쪼아요", file: "assets/mobile/joayo.mp4", png: "assets/mobile/joayo.png" },
-      { name: "네르지마세요", file: "assets/mobile/nerujimaseyo.mp4", png: "assets/mobile/nerujimaseyo.png" }
-    ],
-    spec: [["사이즈", "1080 × 2340px (세로, 9:19.5)"], ["파일 형식", "MP4 (움직이는 배경화면) / PNG (정지 이미지)"]],
-    guides: [
-      { title: "아이폰", steps: [
-        "저장한 영상을 Live Photo로 바꿔주는 앱으로 Live Photo로 변환해요.",
-        "설정 > 배경화면 > 새로운 배경화면 추가 > 사진에서 변환한 Live Photo를 골라요.",
-        "Live Photo 버튼을 켜고 추가해요. 잠금화면에서 움직이고, 홈 화면에서는 움직이지 않아요."
-      ]},
-      { title: "갤럭시", steps: [
-        "저장한 영상을 갤러리에서 열어요.",
-        "더보기(⋮) > 배경화면으로 설정 > 잠금화면을 골라요.",
-        "메뉴 이름은 One UI 버전에 따라 달라요."
-      ]},
-      { title: "그 외 안드로이드", steps: [
-        "영상을 배경화면으로 지정할 수 있는 라이브 배경화면 앱을 설치해요.",
-        "앱에서 저장한 영상을 골라 배경화면으로 설정해요."
-      ]}
-    ]
-  },
-  pc: {
-    items: [
-      { name: "쪼아요", file: "assets/pc/joayo.mp4", png: "assets/pc/joayo.png" },
-      { name: "네르지마세요", file: "assets/pc/nerujimaseyo.mp4", png: "assets/pc/nerujimaseyo.png" }
-    ],
-    spec: [["사이즈", "1920 × 1080px (가로, 16:9)"], ["파일 형식", "MP4 (움직이는 배경화면) / PNG (정지 이미지)"]],
-    guides: [
-      { title: "윈도우", steps: [
-        "영상 배경화면을 지원하는 프로그램을 설치해요. (예: Lively Wallpaper, Wallpaper Engine)",
-        "프로그램에서 저장한 영상을 추가하고 배경화면으로 지정해요."
-      ]},
-      { title: "맥", steps: [
-        "맥은 영상 배경화면 기능이 기본으로 없어서 영상 배경화면 앱이 필요해요.",
-        "앱에서 저장한 영상을 추가하고 배경화면으로 지정해요."
-      ]}
-    ]
-  },
-  watch: {
-    items: [
-      { name: "쪼아요", file: "assets/watch/joayo.mp4", gif: "assets/watch/joayo.gif", png: "assets/watch/joayo.png" },
-      { name: "네르지마세요", file: "assets/watch/nerujimaseyo.mp4", gif: "assets/watch/nerujimaseyo.gif", png: "assets/watch/nerujimaseyo.png" }
-    ],
-    spec: [["사이즈", "450 × 450px (정사각형)"], ["파일 형식", "MP4 (애플워치) / GIF (갤럭시 워치) / PNG (정지 이미지)"]],
-    guides: [
-      { title: "갤럭시 워치", steps: [
-        "GIF로 저장해서 연결된 폰에 보관해요.",
-        "Galaxy Wearable 앱 > 워치 페이스 > My Photo+를 골라요.",
-        "커스터마이즈에서 저장한 GIF를 배경으로 추가해요."
-      ]},
-      { title: "애플워치", steps: [
-        "MP4로 저장해서 Live Photo로 변환해요.",
-        "워치 앱에서 사진 워치 페이스를 추가하고 변환한 Live Photo를 골라요.",
-        "애플워치는 Live Photo를 최대 3초까지만 재생하고, 화면을 눌러야 움직여요."
-      ]}
-    ]
-  },
+  mobile: { items: [
+    { file: "assets/mobile/joayo.mp4", png: "assets/mobile/joayo.png" },
+    { file: "assets/mobile/nerujimaseyo.mp4", png: "assets/mobile/nerujimaseyo.png" }
+  ]},
+  pc: { items: [
+    { file: "assets/pc/joayo.mp4", png: "assets/pc/joayo.png" },
+    { file: "assets/pc/nerujimaseyo.mp4", png: "assets/pc/nerujimaseyo.png" }
+  ]},
+  watch: { items: [
+    { file: "assets/watch/joayo.mp4", gif: "assets/watch/joayo.gif", png: "assets/watch/joayo.png" },
+    { file: "assets/watch/nerujimaseyo.mp4", gif: "assets/watch/nerujimaseyo.gif", png: "assets/watch/nerujimaseyo.png" }
+  ]},
   reactive: {
     // preview = 반응 장면 미리보기 영상(선택), poster = 미리보기 대표 이미지, file = 배포 파일(zip 등), workshop = 스팀 워크샵 주소(선택)
     items: [
-      { name: "쪼아요", preview: "assets/reactive/joayo.mp4", poster: "assets/reactive/joayo.png", file: "assets/reactive/joayo.zip", label: "다운로드", workshop: "" },
-      { name: "네르지마세요", preview: "assets/reactive/nerujimaseyo.mp4", poster: "assets/reactive/nerujimaseyo.png", file: "assets/reactive/nerujimaseyo.zip", label: "다운로드", workshop: "" }
-    ],
-    spec: [["대상", "PC (윈도우)"], ["필요 프로그램", "Wallpaper Engine (스팀)"], ["파일 형식", "Wallpaper Engine 배경화면 파일 (ZIP)"]],
-    guides: [
-      { title: "스팀 워크샵으로 받기", steps: [
-        "스팀에 로그인하고 Wallpaper Engine이 설치되어 있는지 확인합니다. (유료 프로그램입니다.)",
-        "원하는 배경화면의 워크샵 버튼을 눌러 스팀 워크샵 페이지를 엽니다.",
-        "구독을 누르면 Wallpaper Engine에 자동으로 추가됩니다.",
-        "Wallpaper Engine을 열어 설치된 배경화면 중에서 선택해 적용한 뒤, 캐릭터에 마우스로 반응해 보세요."
-      ]},
-      { title: "파일로 받기 (ZIP)", steps: [
-        "다운로드한 ZIP 파일의 압축을 풉니다.",
-        "Wallpaper Engine에서 배경화면 열기 > 파일에서 열기를 선택하고, 압축을 푼 폴더 안의 배경화면 파일을 엽니다.",
-        "배경화면으로 적용합니다."
-      ]},
-      { title: "맥 / 모바일", steps: [
-        "Wallpaper Engine은 윈도우용 프로그램이라 반응형 배경화면은 윈도우 PC에서만 이용할 수 있습니다."
-      ]}
+      { preview: "assets/reactive/joayo.mp4", poster: "assets/reactive/joayo.png", file: "assets/reactive/joayo.zip", zip: true, workshop: "" },
+      { preview: "assets/reactive/nerujimaseyo.mp4", poster: "assets/reactive/nerujimaseyo.png", file: "assets/reactive/nerujimaseyo.zip", zip: true, workshop: "" }
     ]
   }
 };
+
+/* 언어별 문구 */
+const I18N = {
+
+/* ───────────── 한국어 ───────────── */
+ko: {
+  htmlLang: "ko",
+  machine: "",
+  termsMachine: "",
+  title: "스핔이 라이브 배경화면",
+  h1: ["스핔이 ", "라이브 배경화면"],
+  lead: ["무료로 배포하는 라이브 배경화면이에요. 사용하는 기기를 골라 저장해주세요. ", "이용약관", "을 꼭 확인해주세요!"],
+  tabsLabel: "기기 선택",
+  tabs: { mobile: "모바일", pc: "PC", watch: "워치", reactive: "반응형" },
+  specTitle: "규격",
+  guideTitle: "설정 방법",
+  caveat: "기종과 OS 버전에 따라 메뉴 이름이나 동작이 다를 수 있어요.",
+  termsTitle: "이용약관",
+  back: "배경화면으로 돌아가기",
+  original: "트릭컬 리바이브",
+  creator: "로하",
+  effective: "2026년 11월 12일",
+  creditOriginal: "원작: ",
+  creditCreator: "제작: ",
+  creditNote: o => "이 사이트의 배경화면은 " + o + "을(를) 바탕으로 제작한 비공식 팬 제작물이며, 원작의 저작권은 원작 권리자에게 있습니다.",
+  previewSuffix: " 미리보기",
+  notFound: "파일을 찾을 수 없어요",
+  btn: { mp4: "MP4 저장", gif: "GIF 저장", png: "PNG 저장", download: "다운로드", workshop: "워크샵" },
+  terms: t => [
+    ["제1조 (목적)", [
+      "이 약관은 '스핔이 라이브 배경화면'(이하 '본 사이트')에서 무료로 배포하는 배경화면(이하 '배포물')의 이용 조건을 정함을 목적으로 합니다."
+    ]],
+    ["제2조 (2차 창작물 및 저작권)", [
+      "① 배포물은 " + t.original + "을(를) 바탕으로 제작한 비공식 팬 제작물(2차 창작물)이며, 원작 및 원작 권리자와 무관합니다.",
+      "② 원작의 캐릭터 등에 대한 권리는 원작 권리자에게 있으며, 배포물에서 제작자가 새로 만든 부분에 대한 권리는 제작자에게 있습니다.",
+      "③ 원작 권리자의 가이드라인이 변경되거나 권리자의 요청이 있는 경우, 배포물은 예고 없이 수정되거나 배포가 중단될 수 있습니다."
+    ]],
+    ["제3조 (이용 범위)", [
+      "이용자는 배포물을 본인 기기의 배경화면으로 설정하는 개인적·비상업적 용도에 한하여 무료로 이용할 수 있습니다."
+    ]],
+    ["제4조 (금지 행위)", [
+      "이용자는 다음 행위를 할 수 없습니다.",
+      "1. 배포물 파일을 다른 사이트나 서비스에 다시 올리거나 배포하는 행위",
+      "2. 배포물을 판매하거나 유료로 제공하는 등 영리 목적으로 이용하는 행위",
+      "3. 배포물을 수정·가공하여 배포하는 행위",
+      "4. 제작자를 사칭하거나 배포물을 본인이 제작한 것처럼 표시하는 행위",
+      "5. 배포물을 인공지능 학습 데이터로 이용하는 행위",
+      "6. 배포물을 비방, 혐오, 선정적인 내용 등 원작과 제작자의 이미지를 훼손하는 맥락에 이용하는 행위"
+    ]],
+    ["제5조 (링크 공유 및 SNS 게시)", [
+      "① 본 사이트의 링크를 다른 사람에게 공유하는 것은 자유롭게 할 수 있습니다.",
+      "② 배경화면을 설정한 화면을 개인 SNS에 게시하는 것은 허용되며, 출처를 표기해 주시기를 권장합니다."
+    ]],
+    ["제6조 (서비스 변경 및 중단)", [
+      "제작자는 사전 고지 없이 배포물을 교체하거나 배포를 중단하거나 본 사이트의 내용을 변경할 수 있습니다."
+    ]],
+    ["제7조 (면책)", [
+      "제작자는 기기 및 운영체제 호환 문제, 설정 실패, 배터리 소모, 데이터 통신 요금, 이용자가 사용하는 외부 앱·프로그램으로 인해 발생한 문제에 대하여 책임을 지지 않습니다."
+    ]],
+    ["제8조 (위반 시 조치)", [
+      "이용자가 이 약관을 위반한 경우 제작자는 해당 게시물의 삭제를 요청할 수 있으며, 필요한 경우 법적 조치를 할 수 있습니다."
+    ]],
+    ["제9조 (문의 및 개정)", [
+      "① 이 약관에 관한 문의는 " + CONTACT + "으로 해 주시기 바랍니다.",
+      "② 약관을 개정하는 경우 본 사이트에 공지하며, 개정된 약관은 공지한 때부터 효력이 발생합니다.",
+      "③ 이 약관은 " + t.effective + "부터 시행합니다."
+    ]]
+  ],
+  devices: {
+    mobile: {
+      names: ["쪼아요", "네르지마세요"],
+      spec: [["사이즈", "1080 × 2340px (세로, 9:19.5)"], ["파일 형식", "MP4 (움직이는 배경화면) / PNG (정지 이미지)"]],
+      guides: [
+        { title: "아이폰", steps: [
+          "저장한 영상을 Live Photo로 바꿔주는 앱으로 Live Photo로 변환해요.",
+          "설정 > 배경화면 > 새로운 배경화면 추가 > 사진에서 변환한 Live Photo를 골라요.",
+          "Live Photo 버튼을 켜고 추가해요. 잠금화면에서 움직이고, 홈 화면에서는 움직이지 않아요."
+        ]},
+        { title: "갤럭시", steps: [
+          "저장한 영상을 갤러리에서 열어요.",
+          "더보기(⋮) > 배경화면으로 설정 > 잠금화면을 골라요.",
+          "메뉴 이름은 One UI 버전에 따라 달라요."
+        ]},
+        { title: "그 외 안드로이드", steps: [
+          "영상을 배경화면으로 지정할 수 있는 라이브 배경화면 앱을 설치해요.",
+          "앱에서 저장한 영상을 골라 배경화면으로 설정해요."
+        ]}
+      ]
+    },
+    pc: {
+      names: ["쪼아요", "네르지마세요"],
+      spec: [["사이즈", "1920 × 1080px (가로, 16:9)"], ["파일 형식", "MP4 (움직이는 배경화면) / PNG (정지 이미지)"]],
+      guides: [
+        { title: "윈도우", steps: [
+          "영상 배경화면을 지원하는 프로그램을 설치해요. (예: Lively Wallpaper, Wallpaper Engine)",
+          "프로그램에서 저장한 영상을 추가하고 배경화면으로 지정해요."
+        ]},
+        { title: "맥", steps: [
+          "맥은 영상 배경화면 기능이 기본으로 없어서 영상 배경화면 앱이 필요해요.",
+          "앱에서 저장한 영상을 추가하고 배경화면으로 지정해요."
+        ]}
+      ]
+    },
+    watch: {
+      names: ["쪼아요", "네르지마세요"],
+      spec: [["사이즈", "450 × 450px (정사각형)"], ["파일 형식", "MP4 (애플워치) / GIF (갤럭시 워치) / PNG (정지 이미지)"]],
+      guides: [
+        { title: "갤럭시 워치", steps: [
+          "GIF로 저장해서 연결된 폰에 보관해요.",
+          "Galaxy Wearable 앱 > 워치 페이스 > My Photo+를 골라요.",
+          "커스터마이즈에서 저장한 GIF를 배경으로 추가해요."
+        ]},
+        { title: "애플워치", steps: [
+          "MP4로 저장해서 Live Photo로 변환해요.",
+          "워치 앱에서 사진 워치 페이스를 추가하고 변환한 Live Photo를 골라요.",
+          "애플워치는 Live Photo를 최대 3초까지만 재생하고, 화면을 눌러야 움직여요."
+        ]}
+      ]
+    },
+    reactive: {
+      names: ["쪼아요", "네르지마세요"],
+      spec: [["대상", "PC (윈도우)"], ["필요 프로그램", "Wallpaper Engine (스팀)"], ["파일 형식", "Wallpaper Engine 배경화면 파일 (ZIP)"]],
+      guides: [
+        { title: "스팀 워크샵으로 받기", steps: [
+          "스팀에 로그인하고 Wallpaper Engine이 설치되어 있는지 확인합니다. (유료 프로그램입니다.)",
+          "원하는 배경화면의 워크샵 버튼을 눌러 스팀 워크샵 페이지를 엽니다.",
+          "구독을 누르면 Wallpaper Engine에 자동으로 추가됩니다.",
+          "Wallpaper Engine을 열어 설치된 배경화면 중에서 선택해 적용한 뒤, 캐릭터에 마우스로 반응해 보세요."
+        ]},
+        { title: "파일로 받기 (ZIP)", steps: [
+          "다운로드한 ZIP 파일의 압축을 풉니다.",
+          "Wallpaper Engine에서 배경화면 열기 > 파일에서 열기를 선택하고, 압축을 푼 폴더 안의 배경화면 파일을 엽니다.",
+          "배경화면으로 적용합니다."
+        ]},
+        { title: "맥 / 모바일", steps: [
+          "Wallpaper Engine은 윈도우용 프로그램이라 반응형 배경화면은 윈도우 PC에서만 이용할 수 있습니다."
+        ]}
+      ]
+    }
+  }
+},
+
+/* ───────────── 日本語 ───────────── */
+ja: {
+  htmlLang: "ja",
+  machine: "このページの日本語は機械翻訳によるものです。不自然な表現や分かりにくい箇所がある場合があります。",
+  termsMachine: "内容に相違がある場合は、韓国語版が優先されます。",
+  title: "ｽﾋﾟｷ ライブ壁紙",
+  h1: ["ｽﾋﾟｷ ", "ライブ壁紙"],
+  lead: ["無料で配布しているライブ壁紙です。お使いの端末を選んで保存してください。", "利用規約", "を必ずご確認ください！"],
+  tabsLabel: "端末の選択",
+  tabs: { mobile: "モバイル", pc: "PC", watch: "ウォッチ", reactive: "リアクティブ" },
+  specTitle: "仕様",
+  guideTitle: "設定方法",
+  caveat: "機種やOSのバージョンによって、メニュー名や動作が異なる場合があります。",
+  termsTitle: "利用規約",
+  back: "壁紙に戻る",
+  original: "トリッカル",
+  creator: "ロハ",
+  effective: "2026年11月12日",
+  creditOriginal: "原作：",
+  creditCreator: "制作：",
+  creditNote: o => "このサイトの壁紙は『" + o + "』を元に制作した非公式のファン制作物であり、原作の著作権は原作の権利者に帰属します。",
+  previewSuffix: " プレビュー",
+  notFound: "ファイルが見つかりません",
+  btn: { mp4: "MP4を保存", gif: "GIFを保存", png: "PNGを保存", download: "ダウンロード", workshop: "ワークショップ" },
+  terms: t => [
+    ["第1条（目的）", [
+      "この規約は、「ｽﾋﾟｷ ライブ壁紙」（以下「本サイト」）で無料配布している壁紙（以下「配布物」）の利用条件を定めることを目的とします。"
+    ]],
+    ["第2条（二次創作物および著作権）", [
+      "① 配布物は『" + t.original + "』を元に制作した非公式のファン制作物（二次創作物）であり、原作および原作の権利者とは関係ありません。",
+      "② 原作のキャラクター等に関する権利は原作の権利者に帰属し、配布物のうち制作者が新たに作成した部分に関する権利は制作者に帰属します。",
+      "③ 原作の権利者のガイドラインが変更された場合や権利者から要請があった場合、配布物は予告なく修正されたり、配布が中止されたりすることがあります。"
+    ]],
+    ["第3条（利用範囲）", [
+      "利用者は、配布物をご自身の端末の壁紙として設定する個人的・非営利目的の範囲に限り、無料で利用できます。"
+    ]],
+    ["第4条（禁止行為）", [
+      "利用者は次の行為をしてはいけません。",
+      "1. 配布物のファイルを他のサイトやサービスに再アップロードまたは再配布する行為",
+      "2. 配布物を販売したり有料で提供したりするなど、営利目的で利用する行為",
+      "3. 配布物を修正・加工して配布する行為",
+      "4. 制作者になりすます行為、または配布物をご自身が制作したかのように表示する行為",
+      "5. 配布物をAIの学習データとして利用する行為",
+      "6. 配布物を、誹謗中傷、ヘイト、性的な内容など、原作や制作者のイメージを損なう文脈で利用する行為"
+    ]],
+    ["第5条（リンクの共有およびSNSへの投稿）", [
+      "① 本サイトのリンクを他の人に共有することは自由にできます。",
+      "② 壁紙を設定した画面を個人のSNSに投稿することは許可されており、出典を明記していただくことをおすすめします。"
+    ]],
+    ["第6条（サービスの変更および中止）", [
+      "制作者は、事前の告知なく配布物を差し替えたり、配布を中止したり、本サイトの内容を変更したりすることがあります。"
+    ]],
+    ["第7条（免責）", [
+      "制作者は、端末やOSの互換性の問題、設定の失敗、バッテリー消費、データ通信料、利用者が使用する外部アプリ・プログラムに起因して生じた問題について、責任を負いません。"
+    ]],
+    ["第8条（違反時の措置）", [
+      "利用者がこの規約に違反した場合、制作者は該当する投稿の削除を求めることができ、必要な場合は法的措置を取ることができます。"
+    ]],
+    ["第9条（お問い合わせおよび改定）", [
+      "① この規約に関するお問い合わせは " + CONTACT + " までお願いいたします。",
+      "② 規約を改定する場合は本サイトでお知らせし、改定後の規約はお知らせした時点から効力を生じます。",
+      "③ この規約は " + t.effective + " から施行します。"
+    ]]
+  ],
+  devices: {
+    mobile: {
+      names: ["ﾁｮﾜﾖ", "ﾃﾞﾙｼﾞﾊﾞｾﾞﾖ"],
+      spec: [["サイズ", "1080 × 2340px（縦、9:19.5）"], ["ファイル形式", "MP4（動く壁紙）/ PNG（静止画）"]],
+      guides: [
+        { title: "iPhone", steps: [
+          "保存した動画を、Live Photoに変換できるアプリでLive Photoに変換します。",
+          "設定 > 壁紙 > 新しい壁紙を追加 > 写真 から、変換したLive Photoを選びます。",
+          "Live Photoボタンをオンにして追加します。ロック画面では動きますが、ホーム画面では動きません。"
+        ]},
+        { title: "Galaxy", steps: [
+          "保存した動画をギャラリーで開きます。",
+          "その他（⋮）> 壁紙に設定 > ロック画面 を選びます。",
+          "メニュー名はOne UIのバージョンによって異なります。"
+        ]},
+        { title: "その他のAndroid", steps: [
+          "動画を壁紙に設定できるライブ壁紙アプリをインストールします。",
+          "アプリで保存した動画を選び、壁紙に設定します。"
+        ]}
+      ]
+    },
+    pc: {
+      names: ["ﾁｮﾜﾖ", "ﾃﾞﾙｼﾞﾊﾞｾﾞﾖ"],
+      spec: [["サイズ", "1920 × 1080px（横、16:9）"], ["ファイル形式", "MP4（動く壁紙）/ PNG（静止画）"]],
+      guides: [
+        { title: "Windows", steps: [
+          "動画壁紙に対応したプログラムをインストールします。（例：Lively Wallpaper、Wallpaper Engine）",
+          "プログラムで保存した動画を追加し、壁紙に設定します。"
+        ]},
+        { title: "Mac", steps: [
+          "Macには動画壁紙の機能が標準で備わっていないため、動画壁紙アプリが必要です。",
+          "アプリで保存した動画を追加し、壁紙に設定します。"
+        ]}
+      ]
+    },
+    watch: {
+      names: ["ﾁｮﾜﾖ", "ﾃﾞﾙｼﾞﾊﾞｾﾞﾖ"],
+      spec: [["サイズ", "450 × 450px（正方形）"], ["ファイル形式", "MP4（Apple Watch）/ GIF（Galaxy Watch）/ PNG（静止画）"]],
+      guides: [
+        { title: "Galaxy Watch", steps: [
+          "GIFで保存し、接続しているスマートフォンに保管します。",
+          "Galaxy Wearableアプリ > ウォッチフェイス > My Photo+ を選びます。",
+          "カスタマイズで、保存したGIFを背景として追加します。"
+        ]},
+        { title: "Apple Watch", steps: [
+          "MP4で保存し、Live Photoに変換します。",
+          "Watchアプリで「写真」文字盤を追加し、変換したLive Photoを選びます。",
+          "Apple WatchではLive Photoが最大3秒までしか再生されず、画面をタップしないと動きません。"
+        ]}
+      ]
+    },
+    reactive: {
+      names: ["ﾁｮﾜﾖ", "ﾃﾞﾙｼﾞﾊﾞｾﾞﾖ"],
+      spec: [["対象", "PC（Windows）"], ["必要なプログラム", "Wallpaper Engine（Steam）"], ["ファイル形式", "Wallpaper Engine 壁紙ファイル（ZIP）"]],
+      guides: [
+        { title: "Steamワークショップで入手", steps: [
+          "Steamにログインし、Wallpaper Engineがインストールされているか確認します。（有料のプログラムです。）",
+          "ご希望の壁紙のワークショップボタンを押して、Steamワークショップのページを開きます。",
+          "「サブスクライブ」を押すと、Wallpaper Engineに自動的に追加されます。",
+          "Wallpaper Engineを開き、インストール済みの壁紙から選んで適用したら、キャラクターにマウスで反応させてみてください。"
+        ]},
+        { title: "ファイルで入手（ZIP）", steps: [
+          "ダウンロードしたZIPファイルを解凍します。",
+          "Wallpaper Engineで「壁紙を開く > ファイルから開く」を選び、解凍したフォルダ内の壁紙ファイルを開きます。",
+          "壁紙として適用します。"
+        ]},
+        { title: "Mac / モバイル", steps: [
+          "Wallpaper EngineはWindows用のプログラムのため、リアクティブ壁紙はWindows PCでのみご利用いただけます。"
+        ]}
+      ]
+    }
+  }
+},
+
+/* ───────────── English ───────────── */
+en: {
+  htmlLang: "en",
+  machine: "This English page was translated by machine translation, so some wording may sound unnatural or unclear.",
+  termsMachine: "If there is any discrepancy, the Korean version prevails.",
+  title: "Speaki-e Live Wallpaper",
+  h1: ["Speaki-e ", "Live Wallpaper"],
+  lead: ["These live wallpapers are distributed for free. Pick your device and save the one you like. Please be sure to read the ", "Terms of Use", "!"],
+  tabsLabel: "Select device",
+  tabs: { mobile: "Mobile", pc: "PC", watch: "Watch", reactive: "Reactive" },
+  specTitle: "Specs",
+  guideTitle: "How to set up",
+  caveat: "Menu names and behavior may differ depending on your device model and OS version.",
+  termsTitle: "Terms of Use",
+  back: "Back to wallpapers",
+  original: "Trickcal: Revive",
+  creator: "Roha",
+  effective: "November 12, 2026",
+  creditOriginal: "Original work: ",
+  creditCreator: "Created by: ",
+  creditNote: o => "The wallpapers on this site are unofficial fan works based on " + o + ". The copyright of the original work belongs to its rights holders.",
+  previewSuffix: " preview",
+  notFound: "File not found",
+  btn: { mp4: "Save MP4", gif: "Save GIF", png: "Save PNG", download: "Download", workshop: "Workshop" },
+  terms: t => [
+    ["Article 1 (Purpose)", [
+      "These Terms set out the conditions for using the wallpapers (the \"Content\") distributed free of charge on \"Speaki-e Live Wallpaper\" (the \"Site\")."
+    ]],
+    ["Article 2 (Derivative Works and Copyright)", [
+      "① The Content is an unofficial fan-made work (derivative work) based on " + t.original + ", and is not affiliated with the original work or its rights holders.",
+      "② Rights to the characters and other elements of the original work belong to its rights holders, and rights to the parts of the Content newly created by the creator belong to the creator.",
+      "③ If the original rights holders' guidelines change or they so request, the Content may be modified or its distribution discontinued without prior notice."
+    ]],
+    ["Article 3 (Scope of Use)", [
+      "Users may use the Content free of charge only for personal, non-commercial purposes, namely setting it as the wallpaper on their own devices."
+    ]],
+    ["Article 4 (Prohibited Acts)", [
+      "Users must not do any of the following.",
+      "1. Re-upload or redistribute the Content files on other sites or services",
+      "2. Use the Content for commercial purposes, such as selling it or offering it for a fee",
+      "3. Modify or alter the Content and distribute it",
+      "4. Impersonate the creator or present the Content as one's own work",
+      "5. Use the Content as AI training data",
+      "6. Use the Content in contexts that damage the image of the original work or the creator, such as defamation, hate, or sexually explicit content"
+    ]],
+    ["Article 5 (Sharing Links and Posting on Social Media)", [
+      "① You may freely share the link to this Site with others.",
+      "② You may post screens showing the wallpaper set on your device to your personal social media, and we encourage you to credit the source."
+    ]],
+    ["Article 6 (Changes to or Discontinuation of the Service)", [
+      "The creator may replace the Content, discontinue its distribution, or change the content of this Site without prior notice."
+    ]],
+    ["Article 7 (Disclaimer)", [
+      "The creator is not responsible for problems arising from device or OS compatibility issues, failed setup, battery consumption, mobile data charges, or external apps or programs used by the user."
+    ]],
+    ["Article 8 (Action in Case of Violation)", [
+      "If a user violates these Terms, the creator may request the removal of the relevant post and, where necessary, take legal action."
+    ]],
+    ["Article 9 (Inquiries and Amendments)", [
+      "① Please direct any inquiries about these Terms to " + CONTACT + ".",
+      "② If these Terms are amended, notice will be given on this Site, and the amended Terms take effect from the time of the notice.",
+      "③ These Terms take effect on " + t.effective + "."
+    ]]
+  ],
+  devices: {
+    mobile: {
+      names: ["jjoayo", "nerjimaseyo"],
+      spec: [["Size", "1080 × 2340px (portrait, 9:19.5)"], ["File format", "MP4 (animated wallpaper) / PNG (still image)"]],
+      guides: [
+        { title: "iPhone", steps: [
+          "Convert the saved video to a Live Photo using an app that turns videos into Live Photos.",
+          "Go to Settings > Wallpaper > Add New Wallpaper > Photos, and choose the converted Live Photo.",
+          "Turn on the Live Photo button and add it. It moves on the Lock Screen but not on the Home Screen."
+        ]},
+        { title: "Galaxy", steps: [
+          "Open the saved video in Gallery.",
+          "Tap More (⋮) > Set as wallpaper, then choose Lock screen.",
+          "Menu names vary depending on your One UI version."
+        ]},
+        { title: "Other Android", steps: [
+          "Install a live wallpaper app that lets you set a video as your wallpaper.",
+          "In the app, choose the saved video and set it as your wallpaper."
+        ]}
+      ]
+    },
+    pc: {
+      names: ["jjoayo", "nerjimaseyo"],
+      spec: [["Size", "1920 × 1080px (landscape, 16:9)"], ["File format", "MP4 (animated wallpaper) / PNG (still image)"]],
+      guides: [
+        { title: "Windows", steps: [
+          "Install a program that supports video wallpapers. (e.g., Lively Wallpaper, Wallpaper Engine)",
+          "In the program, add the saved video and set it as your wallpaper."
+        ]},
+        { title: "Mac", steps: [
+          "macOS has no built-in video wallpaper feature, so you will need a video wallpaper app.",
+          "In the app, add the saved video and set it as your wallpaper."
+        ]}
+      ]
+    },
+    watch: {
+      names: ["jjoayo", "nerjimaseyo"],
+      spec: [["Size", "450 × 450px (square)"], ["File format", "MP4 (Apple Watch) / GIF (Galaxy Watch) / PNG (still image)"]],
+      guides: [
+        { title: "Galaxy Watch", steps: [
+          "Save it as a GIF and keep it on the connected phone.",
+          "In the Galaxy Wearable app, go to Watch faces and choose My Photo+.",
+          "In Customize, add the saved GIF as the background."
+        ]},
+        { title: "Apple Watch", steps: [
+          "Save it as an MP4 and convert it to a Live Photo.",
+          "In the Watch app, add a Photos watch face and choose the converted Live Photo.",
+          "Apple Watch plays a Live Photo for up to 3 seconds only, and it moves only when you tap the screen."
+        ]}
+      ]
+    },
+    reactive: {
+      names: ["jjoayo", "nerjimaseyo"],
+      spec: [["Platform", "PC (Windows)"], ["Required software", "Wallpaper Engine (Steam)"], ["File format", "Wallpaper Engine wallpaper file (ZIP)"]],
+      guides: [
+        { title: "Get it from Steam Workshop", steps: [
+          "Log in to Steam and make sure Wallpaper Engine is installed. (It is paid software.)",
+          "Click the Workshop button of the wallpaper you want to open its Steam Workshop page.",
+          "Click Subscribe and it will be added to Wallpaper Engine automatically.",
+          "Open Wallpaper Engine, select it from your installed wallpapers and apply it, then try reacting to the character with your mouse."
+        ]},
+        { title: "Get it as a file (ZIP)", steps: [
+          "Extract the downloaded ZIP file.",
+          "In Wallpaper Engine, choose Open Wallpaper > Open from File, and open the wallpaper file inside the extracted folder.",
+          "Apply it as your wallpaper."
+        ]},
+        { title: "Mac / Mobile", steps: [
+          "Wallpaper Engine is a Windows program, so reactive wallpapers can only be used on a Windows PC."
+        ]}
+      ]
+    }
+  }
+}
+};
 /* ▲ */
 
+const SUPPORTED = Object.keys(I18N);
 const $ = id => document.getElementById(id);
+let lang = "ko";
+const T = () => I18N[lang];
+
+/* 접속자 언어 판별: ?lang= → 이전에 직접 고른 언어 → 브라우저 언어 → 기본 언어 */
+function detectLang(){
+  try {
+    const q = new URLSearchParams(location.search).get("lang");
+    if (SUPPORTED.includes(q)) return q;
+  } catch (e) {}
+  try {
+    const s = localStorage.getItem("lang");
+    if (SUPPORTED.includes(s)) return s;
+  } catch (e) {}
+  const list = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ""];
+  for (const l of list) {
+    const p = String(l).toLowerCase().split("-")[0];
+    if (SUPPORTED.includes(p)) return p;
+  }
+  return DEFAULT_LANG;
+}
 
 function nameOrLink(text, url){
   if (!url) return document.createTextNode(text);
@@ -232,48 +587,52 @@ function nameOrLink(text, url){
   a.href = url; a.textContent = text; a.target = "_blank"; a.rel = "noopener noreferrer";
   return a;
 }
-(function renderCredits(){
-  const f = $("credits");
+function renderCredits(){
+  const t = T(), f = $("credits");
+  f.textContent = "";
   const p1 = document.createElement("p");
-  p1.append("원작: ", nameOrLink(ORIGINAL, ORIGINAL_URL));
+  p1.append(t.creditOriginal, nameOrLink(t.original, ORIGINAL_URL));
   const p2 = document.createElement("p");
-  p2.append("제작: ", nameOrLink(CREATOR_NAME, CREATOR_URL));
+  p2.append(t.creditCreator, nameOrLink(t.creator, CREATOR_URL));
   const p3 = document.createElement("p");
-  p3.textContent = "이 사이트의 배경화면은 " + ORIGINAL + "을(를) 바탕으로 제작한 비공식 팬 제작물이며, 원작의 저작권은 원작 권리자에게 있습니다.";
+  p3.textContent = t.creditNote(t.original);
   f.append(p1, p2, p3);
-})();
+}
 const tabs = [...document.querySelectorAll(".tabs button")];
+const langBtns = [...document.querySelectorAll(".langs button")];
 
 function media(file, label, frame, poster){
   const isImg = /\.(gif|png|webp)$/i.test(file);
   const el = document.createElement(isImg ? "img" : "video");
-  el.setAttribute("aria-label", label + " 미리보기");
-  if (isImg) { el.alt = label + " 미리보기"; }
+  const alt = label + T().previewSuffix;
+  el.setAttribute("aria-label", alt);
+  if (isImg) { el.alt = alt; }
   else { el.muted = true; el.loop = true; el.autoplay = true; el.playsInline = true; if (poster) el.poster = poster; }
   el.src = file;
   el.addEventListener("error", () => {
     el.remove();
     const e = document.createElement("div");
     e.className = "empty";
-    e.textContent = "파일을 찾을 수 없어요";
+    e.textContent = T().notFound;
     frame.appendChild(e);
   });
   return el;
 }
 
 function renderDevice(type){
-  const d = DEVICES[type];
+  const t = T(), d = DEVICES[type], txt = t.devices[type];
   $("view").dataset.type = type;
   $("device").setAttribute("aria-labelledby", "t-" + type);
   tabs.forEach(b => b.setAttribute("aria-selected", String(b.dataset.t === type)));
 
   const grid = $("grid"); grid.textContent = "";
-  d.items.forEach(it => {
+  d.items.forEach((it, i) => {
+    const name = txt.names[i];
     const card = document.createElement("div"); card.className = "card";
     const frame = document.createElement("div"); frame.className = "frame";
-    frame.appendChild(media(it.preview || it.file, it.name, frame, it.poster || it.png));
+    frame.appendChild(media(it.preview || it.file, name, frame, it.poster || it.png));
     const row = document.createElement("div"); row.className = "name";
-    const b = document.createElement("b"); b.textContent = it.name;
+    const b = document.createElement("b"); b.textContent = name;
     const btns = document.createElement("div"); btns.className = "btns";
     const mk = (href, text, alt, ext) => {
       const a = document.createElement("a");
@@ -281,23 +640,23 @@ function renderDevice(type){
       if (ext) { a.target = "_blank"; a.rel = "noopener noreferrer"; } else { a.download = ""; }
       return a;
     };
-    btns.append(mk(it.file, it.label || "MP4 저장"));
-    if (it.workshop) btns.append(mk(it.workshop, "워크샵", true, true));
-    if (it.gif) btns.append(mk(it.gif, "GIF 저장", true));
-    if (it.png) btns.append(mk(it.png, "PNG 저장", true));
+    btns.append(mk(it.file, it.zip ? t.btn.download : t.btn.mp4));
+    if (it.workshop) btns.append(mk(it.workshop, t.btn.workshop, true, true));
+    if (it.gif) btns.append(mk(it.gif, t.btn.gif, true));
+    if (it.png) btns.append(mk(it.png, t.btn.png, true));
     row.append(b, btns);
     card.append(frame, row); grid.appendChild(card);
   });
 
   const spec = $("spec"); spec.textContent = "";
-  d.spec.forEach(([k, v]) => {
+  txt.spec.forEach(([k, v]) => {
     const dt = document.createElement("dt"); dt.textContent = k;
     const dd = document.createElement("dd"); dd.textContent = v;
     spec.append(dt, dd);
   });
 
   const guides = $("guides"); guides.textContent = "";
-  d.guides.forEach((g, i) => {
+  txt.guides.forEach((g, i) => {
     const det = document.createElement("details"); if (i === 0) det.open = true;
     const sum = document.createElement("summary"); sum.textContent = g.title;
     const ol = document.createElement("ol");
@@ -306,26 +665,65 @@ function renderDevice(type){
   });
 }
 
+/* 화면 고정 문구를 현재 언어로 교체 */
+function applyStaticText(){
+  const t = T();
+  document.documentElement.lang = t.htmlLang;
+  document.title = t.title;
+  const h1 = $("title"); h1.textContent = t.h1[0];
+  const sp = document.createElement("span"); sp.textContent = t.h1[1]; h1.appendChild(sp);
+  const lead = $("lead"); lead.textContent = "";
+  const link = document.createElement("a"); link.href = "#terms"; link.textContent = t.lead[1];
+  lead.append(t.lead[0], link, t.lead[2]);
+  document.querySelector(".tabs").setAttribute("aria-label", t.tabsLabel);
+  tabs.forEach(b => { b.textContent = t.tabs[b.dataset.t]; });
+  $("specTitle").textContent = t.specTitle;
+  $("guideTitle").textContent = t.guideTitle;
+  $("caveat").textContent = t.caveat;
+  $("termsTitle").textContent = t.termsTitle;
+  $("backLink").textContent = t.back;
+  langBtns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.l === lang)));
+  renderCredits();
+}
+
 function route(){
+  const t = T();
   const h = location.hash.slice(1);
   const isTerms = h === "terms";
   $("terms").hidden = !isTerms;
   $("device").hidden = isTerms;
   document.querySelector(".tabs").hidden = isTerms;
+
+  // 일본어·영어: 기계 번역 안내 (약관 화면에서는 한국어판 우선 문구를 추가)
+  const notice = $("notice");
+  const msg = t.machine ? (t.machine + (isTerms && t.termsMachine ? " " + t.termsMachine : "")) : "";
+  notice.textContent = msg;
+  notice.hidden = !msg;
+
   if (isTerms) {
     const box = $("termsText"); box.textContent = "";
-    TERMS.forEach(([title, paras]) => {
-      const h = document.createElement("h3"); h.textContent = title; box.appendChild(h);
-      paras.forEach(t => { const p = document.createElement("p"); p.textContent = t; box.appendChild(p); });
+    t.terms(t).forEach(([title, paras]) => {
+      const h3 = document.createElement("h3"); h3.textContent = title; box.appendChild(h3);
+      paras.forEach(s => { const p = document.createElement("p"); p.textContent = s; box.appendChild(p); });
     });
-    window.scrollTo(0, 0);
     return;
   }
   renderDevice(DEVICES[h] ? h : "mobile");
 }
+
+function setLang(l, save){
+  lang = l;
+  if (save) { try { localStorage.setItem("lang", l); } catch (e) {} }
+  applyStaticText();
+  route();
+}
+
 tabs.forEach(b => b.addEventListener("click", () => { location.hash = b.dataset.t; }));
-window.addEventListener("hashchange", route);
-route();
+langBtns.forEach(b => b.addEventListener("click", () => setLang(b.dataset.l, true)));
+window.addEventListener("hashchange", () => { route(); if (location.hash === "#terms") window.scrollTo(0, 0); });
+setLang(detectLang(), false);
+if (location.hash === "#terms") window.scrollTo(0, 0);
+
 </script>
 </body>
 </html>
